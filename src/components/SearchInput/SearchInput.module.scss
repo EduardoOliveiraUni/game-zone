@@ -1,0 +1,41 @@
+.wrapper {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  flex-direction: column;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+  }
+}
+
+.input {
+  flex: 1;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: white;
+  transition: border 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #666;
+  }
+}
+
+.button {
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 8px;
+  background: #333;
+  color: white;
+  border: 1px solid #444;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: #555;
+  }
+}
