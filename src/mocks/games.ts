@@ -1,17 +1,6 @@
-export type Game = {
-  id: number;
-  title: string;
-  description: string;
-  fullDescription: string;
-  image: string;
-  genre: string;
-  releaseYear: number;
-  tags: string[];
-  similarIds?: number[];
-  popularity: number;
-};
+import { GameDetail } from "@/types/Game";
 
-export const games: Game[] = [
+export const games: GameDetail[] = [
   {
     id: 1,
     title: "Call of Duty: Warzone",
@@ -478,5 +467,17 @@ export const games: Game[] = [
     releaseYear: 2018,
     tags: ["multiplayer", "online", "party", "social-deduction", "casual"],
     popularity: 7,
+  },
+  {
+    id: 37,
+    title: "Forza Horizon 5",
+    description: "Corridas em mundo aberto com carros e eventos variados.",
+    fullDescription:
+      "Forza Horizon 5 oferece corridas emocionantes em um mundo aberto vibrante, com uma vasta seleção de carros e eventos dinâmicos.",
+    image: "/games/forza5.jpg",
+    genre: "Corrida / Mundo Aberto",
+    releaseYear: 2021,
+    tags: ["racing", "open-world", "cars", "multiplayer", "events", "action"],
+    popularity: 9,
   },
 ];
