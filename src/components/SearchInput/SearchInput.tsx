@@ -1,26 +1,42 @@
 "use client";
 
-import { useState, KeyboardEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./SearchInput.module.scss";
 
 type Props = {
-  onSearch: (query: string) => void;
+  value: string;
+  onChange: (value: string) => void;
+
+  onDebouncedChange?: (value: string) => void;
+
   placeholder?: string;
-  buttonLabel?: string;
+  debounceMs?: number;
 };
 
 export default function SearchInput({
-  onSearch,
-  placeholder = "Digite o nome de um jogo...",
-  buttonLabel = "Buscar",
+  value,
+  onChange,
+  onDebouncedChange,
+  placeholder = "Digite o nome de um jogo",
+  debounceMs = 250,
 }: Props) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [localValue, setLocalValue] = useState(value);
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      onSearch(searchQuery);
-    }
-  };
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const trimmed = useMemo(() => localValue, [localValue]);
+
+  useEffect(() => {
+    if (!onDebouncedChange) return;
+
+    const t = window.setTimeout(() => {
+      onDebouncedChange(trimmed);
+    }, debounceMs);
+
+    return () => window.clearTimeout(t);
+  }, [trimmed, debounceMs, onDebouncedChange]);
 
   return (
     <div className={styles.wrapper}>
@@ -28,18 +44,13 @@ export default function SearchInput({
         type="text"
         className={styles.input}
         placeholder={placeholder}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={handleKeyDown}
+        value={localValue}
+        onChange={(e) => {
+          const v = e.target.value;
+          setLocalValue(v);
+          onChange(v);
+        }}
       />
-
-      <button
-        type="button"
-        className={styles.button}
-        onClick={() => onSearch(searchQuery)}
-      >
-        {buttonLabel}
-      </button>
     </div>
   );
 }

@@ -1,95 +1,162 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import styles from "./page.module.scss";
 import GameDetails from "@/components/GameDetails/GameDetails";
 import SimilarGames from "@/components/SimilarGames/SimilarGames";
-
-// Mock temporário (substituir por API)
-const games = [
-  {
-    id: 1,
-    title: "Call of Duty",
-    description: "Combates intensos e ação tática em missões militares.",
-    fullDescription:
-      "Call of Duty oferece uma experiência imersiva de guerra moderna com mecânicas refinadas, missões cinematográficas e multiplayer competitivo. Entre em operações reais e enfrente batalhas de alta intensidade.",
-    image: "/cod.jpg",
-    genre: "FPS / Ação",
-    releaseYear: 2024,
-  },
-  {
-    id: 2,
-    title: "Counter-Strike",
-    description: "FPS competitivo e estratégico com equipes táticas.",
-    fullDescription:
-      "Counter-Strike redefine o jogo tático competitivo. Duas equipes se enfrentam em partidas estratégicas, onde cada movimento importa. Habilidade, comunicação e precisão determinam o vencedor.",
-    image: "/cs.jpg",
-    genre: "FPS Tático",
-    releaseYear: 2023,
-  },
-  {
-    id: 3,
-    title: "Fifa",
-    description: "Simulação de futebol com jogabilidade realista.",
-    fullDescription:
-      "FIFA traz a mais avançada tecnologia para simulações futebolísticas, com movimentos reais, inteligência artificial refinada e modos competitivos que colocam você no controle da sua equipe favorita.",
-    image: "/fifa.jpg",
-    genre: "Esporte",
-    releaseYear: 2024,
-  },
-  {
-    id: 4,
-    title: "GTA",
-    description: "Mundo aberto, crimes e liberdade total de exploração.",
-    fullDescription:
-      "Grand Theft Auto oferece um mundo aberto vibrante com exploração completa, missões cinematográficas e narrativa adulta. Viva aventuras intensas enquanto enfrenta desafios em um universo criminal expansivo.",
-    image: "/gta.jpg",
-    genre: "Ação / Mundo Aberto",
-    releaseYear: 2013,
-  },
-  {
-    id: 5,
-    title: "Minecraft",
-    description: "Criatividade, blocos e sobrevivência em mundos infinitos.",
-    fullDescription:
-      "Minecraft é uma experiência única de criação e sobrevivência em mundos totalmente gerados proceduralmente. Construa, explore cavernas profundas, enfrente criaturas e crie seu próprio universo sem limites.",
-    image: "/mine.jpg",
-    genre: "Aventura / Criativo",
-    releaseYear: 2011,
-  },
-  {
-    id: 6,
-    title: "The Last of Us",
-    description: "Drama, sobrevivência e narrativa emocional profunda.",
-    fullDescription:
-      "The Last of Us entrega uma história intensa e emocionante, combinando ação furtiva, narrativa profunda e personagens inesquecíveis. Acompanhe Joel e Ellie em uma jornada perigosa em um mundo devastado.",
-    image: "/tlos.jpg",
-    genre: "Drama / Sobrevivência",
-    releaseYear: 2020,
-  },
-];
+import type { GameBase, GameDetail } from "@/types/Game";
 
 export default function GameDetailPage() {
   const params = useParams();
-  const id = Number(params.id);
+  const rawId = (params as any)?.id;
+  const id = Number(Array.isArray(rawId) ? rawId[0] : rawId);
 
-  const game = games.find((g) => g.id === id);
+  const [game, setGame] = useState<GameDetail | null>(null);
+  const [similarGames, setSimilarGames] = useState<GameBase[]>([]);
+  const [popularFallback, setPopularFallback] = useState<GameBase[]>([]);
+  const [showFallbackMessage, setShowFallbackMessage] = useState(false);
 
-  if (!game) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    if (!Number.isFinite(id)) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+
+    let alive = true;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+        setNotFound(false);
+        setShowFallbackMessage(false);
+
+        const [detailRes, similarRes] = await Promise.all([
+          fetch(`/api/games/${id}`, { cache: "no-store" }),
+          fetch(`/api/games/${id}/similar`, { cache: "no-store" }),
+        ]);
+
+        if (detailRes.status === 404) {
+          if (!alive) return;
+          setNotFound(true);
+          setGame(null);
+          setSimilarGames([]);
+          setPopularFallback([]);
+          return;
+        }
+
+        if (!detailRes.ok) {
+          throw new Error(`Falha ao buscar detalhes: ${detailRes.status}`);
+        }
+
+        const detail = (await detailRes.json()) as GameDetail;
+
+        let similar: GameBase[] = [];
+        if (similarRes.ok) {
+          similar = (await similarRes.json()) as GameBase[];
+        }
+
+        if (!alive) return;
+
+        setGame(detail);
+        setSimilarGames(similar);
+
+        if (!similar || similar.length === 0) {
+          setShowFallbackMessage(true);
+
+          const popRes = await fetch("/api/games", { cache: "no-store" });
+          if (popRes.ok) {
+            const all = (await popRes.json()) as GameBase[];
+            const top = [...all]
+              .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+              .slice(0, 6);
+
+            if (!alive) return;
+            setPopularFallback(top);
+          } else {
+            setPopularFallback([]);
+          }
+        } else {
+          setPopularFallback([]);
+        }
+      } catch (e: any) {
+        if (!alive) return;
+        setError(e?.message ?? "Erro ao buscar jogo");
+      } finally {
+        if (!alive) return;
+        setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  const gamesToShow = useMemo(() => {
+    if (similarGames.length > 0) return similarGames;
+    return popularFallback;
+  }, [similarGames, popularFallback]);
+
+  if (loading) {
     return (
-      <div className={styles.notFound}>
-        <h1>Jogo não encontrado</h1>
-        <a href="/" className={styles.backButton}>Voltar à Home</a>
+      <div className={styles.page}>
+        <div className={styles.loading}>
+          <p>Carregando...</p>
+        </div>
       </div>
     );
   }
 
-  const similarGames = games.filter((g) => g.id !== id).slice(0, 3);
+  if (error) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.notFound}>
+          <h1>Opa! Deu erro</h1>
+          <p className={styles.errorText}>{error}</p>
+          <a href="/" className={styles.backButton}>
+            Voltar à Home
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !game) {
+    return (
+      <div className={styles.notFound}>
+        <h1>Jogo não encontrado</h1>
+        <a href="/" className={styles.backButton}>
+          Voltar à Home
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
       <GameDetails game={game} />
-      <SimilarGames games={similarGames} />
+
+      {showFallbackMessage && (
+        <div className={styles.similarFallback}>
+          <p className={styles.similarFallbackTitle}>Não encontramos jogos similares 😕</p>
+          <p className={styles.similarFallbackText}>
+            Mas aqui vão algumas recomendações populares pra você explorar.
+          </p>
+        </div>
+      )}
+
+      <SimilarGames
+        games={gamesToShow}
+        isFallback={showFallbackMessage}
+      />
     </div>
   );
 }

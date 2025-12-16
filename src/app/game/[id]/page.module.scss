@@ -1,5 +1,12 @@
+.loading {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  color: var(--color-text-muted);
+}
+
 .page {
-  min-height: 100vh;
+  height: 100%;
   background: #0d0d0d;
   color: white;
 }
@@ -25,4 +32,37 @@
   &:hover {
     background: #444;
   }
+}
+
+.errorText {
+  color: var(--color-text-muted);
+  margin-top: 8px;
+}
+
+.similarFallback {
+  margin-top: 3rem;
+  padding: 2.5rem 1.5rem;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.similarFallbackTitle {
+  font-size: clamp(1.25rem, 2.5vw, 1.45rem);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.similarFallbackText {
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 420px;
+  color: var(--color-text-muted);
 }

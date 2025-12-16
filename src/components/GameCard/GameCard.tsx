@@ -3,16 +3,10 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import styles from "./GameCard.module.scss";
-
-export type Game = {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-};
+import type { GameBase } from "@/types/Game";
 
 type Props = {
-  game: Game;
+  game: GameBase;
 };
 
 export default function GameCard({ game }: Props) {
@@ -24,18 +18,11 @@ export default function GameCard({ game }: Props) {
 
   return (
     <article className={styles.card} onClick={goToDetails}>
-      {/* IMAGE */}
       <div className={styles.imageWrapper}>
-        <Image
-          src={game.image}
-          alt={game.title}
-          fill
-          className={styles.image}
-        />
+        <Image src={game.image} alt={game.title} fill className={styles.image} />
         <div className={styles.overlay} />
       </div>
 
-      {/* BODY */}
       <div className={styles.body}>
         <h3>{game.title}</h3>
         <p>{game.description}</p>

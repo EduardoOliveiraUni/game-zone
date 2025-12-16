@@ -3,16 +3,10 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import styles from "./GameDetails.module.scss";
+import type { GameDetail } from "@/types/Game";
 
 type Props = {
-  game: {
-    id: number;
-    title: string;
-    fullDescription: string;
-    genre: string;
-    releaseYear: number;
-    image: string;
-  };
+  game: GameDetail;
 };
 
 export default function GameDetails({ game }: Props) {
@@ -34,6 +28,8 @@ export default function GameDetails({ game }: Props) {
             alt={game.title}
             fill
             className={styles.image}
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
           />
         </div>
 
@@ -48,13 +44,6 @@ export default function GameDetails({ game }: Props) {
           <h1 className={styles.title}>{game.title}</h1>
 
           <p className={styles.description}>{game.fullDescription}</p>
-
-          <div className={styles.actions}>
-            <button className={styles.primaryButton}>Jogar agora</button>
-            <button className={styles.secondaryButton}>
-              Adicionar à lista
-            </button>
-          </div>
         </div>
       </div>
     </section>

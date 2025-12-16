@@ -1,17 +1,20 @@
 "use client";
 
 import GameCard from "@/components/GameCard/GameCard";
-import type { Game } from "@/components/GameCard/GameCard";
+import type { GameBase } from "@/types/Game";
 import styles from "./SimilarGames.module.scss";
 
 type Props = {
-  games: Game[];
+  games: GameBase[];
+  isFallback?: boolean;
 };
 
-export default function SimilarGames({ games }: Props) {
+export default function SimilarGames({ games, isFallback = false }: Props) {
+  if (!games.length) return null;
+
   return (
     <section className={styles.section}>
-      <h2>Jogos parecidos</h2>
+      {!isFallback && <h2>Jogos similares</h2>}
 
       <div className={styles.grid}>
         {games.map((g) => (
